@@ -1,5 +1,5 @@
-from nofficeexc import *
-import aproptemplates as tpl
+from .nofficeexc import *
+from . import aproptemplates as tpl
 
 
 class ApropMapDraft(object):

@@ -1,4 +1,4 @@
-from nofficesheet import NOfficeSheet
+from .nofficesheet import NOfficeSheet
 from sisaprop.maprenderers.noffice.apropmapsheet import ApropMapSheet
 from sisaprop.maprenderers.noffice.apropmapdraft import ApropMapDraft
 
@@ -37,4 +37,4 @@ b.addworker(2984, 'DIEGO COSTA PEREIRA')
 
 a.addcontent(str(b))
 
-print a
+print(a)

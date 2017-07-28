@@ -1,5 +1,5 @@
 #!/usr/bin/env python
 
-from cmdlineapp import SISAPROP_CmdLineApp
+from .cmdlineapp import SISAPROP_CmdLineApp
 
-from appexceptions import *
+from .appexceptions import *

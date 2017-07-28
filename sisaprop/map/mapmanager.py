@@ -21,7 +21,7 @@ class MapManager(object):
         validmaplist = {}
 
         # List .csv files in MAPPATH
-        dirlst = os.listdir(unicode(self.mappath))
+        dirlst = os.listdir(self.mappath)
         mapfilenamelist = [os.path.join(self.mappath, fn) for fn in dirlst]
 
         # Iterate over each .csv file trying to import valid ones.

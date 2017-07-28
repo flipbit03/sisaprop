@@ -11,7 +11,7 @@ from sisaprop.helpfulfuncs import reportfatalerror
 parser = argparse.ArgumentParser(description='SISAPROP',
 epilog=u"Sistema de Preenchimento de Mapas de Apropriação")
 
-parser.add_argument('rootpath', nargs="?", default=os.getcwdu(), help=u"Pasta Raiz do SISAPROP")
+parser.add_argument('rootpath', nargs="?", default=os.getcwd(), help=u"Pasta Raiz do SISAPROP")
 
 # Arguments
 

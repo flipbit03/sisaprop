@@ -33,7 +33,7 @@ class MapRendererBase(object):
         self.realrender(self.map, self.path)
 
     def realrender(self, _map, _path):
-        print "{0}: Override __render() to actually do stuff!".format(self)
+        print("{0}: Override __render() to actually do stuff!".format(self))
 
 
 

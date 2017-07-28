@@ -19,8 +19,8 @@ def fr(size, what):
 
 # FAIL
 def exitr(reason, code=0):
-    print "ERRO: %s\n" % (reason)
-    raw_input("-- press enter --")
+    print("ERRO: %s\n" % (reason))
+    input("-- press enter --")
     exit(int(code))
 
     

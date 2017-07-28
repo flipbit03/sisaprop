@@ -1,5 +1,5 @@
-from nofficeexc import *
-from nofficeutil import *
+from .nofficeexc import *
+from .nofficeutil import *
 
 class NOfficeSheet(object):
     # maxlines without the HEADER which is always 1 line long

@@ -1,5 +1,6 @@
-from nofficeexc import *
-import aproptemplates as tpl
+from .nofficeexc import *
+#import sisaprop.maprenderers.noffice.aproptemplates as tpl
+from . import aproptemplates as tpl
 
 
 class ApropMapSheet(object):

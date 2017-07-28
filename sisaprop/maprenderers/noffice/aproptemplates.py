@@ -136,7 +136,7 @@ def quadro(data={3461:'TESTE'},qtdl=8):
     ldata.sort()
     if not len(ldata) == 3:
            for times in range(3-(len(ldata)%3)):
-               print "append..."
+               print("append...")
                ldata.append('')
 
     data[''] = ''

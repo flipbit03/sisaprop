@@ -44,10 +44,10 @@ class SISAPROP_Runner(object):
         maprendermanager = MapRenderManager()
 
         # Generate Output Path from Map Name and Render Method
-        renderoutputpath = os.path.join(self.outputsfolder, unicode(workermap.name), unicode(self.rendermethod))
+        renderoutputpath = os.path.join(self.outputsfolder, workermap.name, self.rendermethod)
         l.debug(u"Output path = {0}".format(renderoutputpath))
 
-        print u"\nO mapa será renderizado na pasta \"{0}\"...".format(renderoutputpath)
+        print(u"\nO mapa será renderizado na pasta \"{0}\"...".format(renderoutputpath))
 
         # Render!
         l.debug(u"[Calling MapRenderManager.Render]")

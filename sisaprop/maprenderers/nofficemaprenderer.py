@@ -1,18 +1,17 @@
 __author__ = 'carlos.coelho'
 
-import os
 import logging
+import os
 
-from maprendererbase import MapRendererBase
+from . import noffice
+
 from sisaprop.map.map import Map
-
-import noffice
+from .maprendererbase import MapRendererBase
 
 l = logging.getLogger("NofficeMapRenderer")
 
 class NofficeMapRenderer(MapRendererBase):
-    def realrender(self, _map, _path):
-        """:type _map: Map"""
+    def realrender(self, _map: Map, _path):
 
         l.debug("Map is [{0}]".format(_map))
         l.debug("RenderPath is [{0}]".format(_path))
@@ -28,14 +27,14 @@ class NofficeMapRenderer(MapRendererBase):
         l.debug("{0} submap(s) to render from map...".format(len(submaps)))
         for submapname in submaps:
             rendersubmapname = submapname.split(u'/')[-1].lower()
-            assert isinstance(rendersubmapname, unicode)
+            assert isinstance(rendersubmapname, str)
             rendersubmapname = rendersubmapname.replace(u'.',u'') + u'.txt'
 
             # Get filename from rendersubmapname
             renderfilename = os.path.join(_path, rendersubmapname)
 
             # Generate each map.
-            print "  Renderizando mapa {0} ({1})...".format(submapname, rendersubmapname)
+            print("  Renderizando mapa {0} ({1})...".format(submapname, rendersubmapname))
             l.debug("Rendering submap \"{0}\".".format(submapname))
             renderstats[rendersubmapname] = self.rendereachmap(submaps[submapname], rendersubmapname, renderfilename)
             l.debug(" ")
@@ -48,7 +47,7 @@ class NofficeMapRenderer(MapRendererBase):
         #interact(local=locals())
 
 
-    def rendereachmap(self, _map, _mapname, _renderfilepath):
+    def rendereachmap(self, _map : Map, _mapname, _renderfilepath):
         assert isinstance(_map, Map)
 
         # Create a list to populate statistics (page number, etc)
@@ -152,6 +151,6 @@ class NofficeMapRenderer(MapRendererBase):
         # Render NofficeDocument to a TXT
         text = nod.rendertotext()
         with open(_renderfilepath, 'wb') as f:
-            f.write(text)
+            f.write(bytes(text, "ascii"))
 
         return renderstatistics

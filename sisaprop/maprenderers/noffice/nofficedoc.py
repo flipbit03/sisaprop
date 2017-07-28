@@ -1,4 +1,4 @@
-from nofficesheet import *
+from .nofficesheet import NOfficeSheet
 
 class NOfficeDoc(object):
     """Class structured to define a full NOfficeDoc Document, spanning several pages"""

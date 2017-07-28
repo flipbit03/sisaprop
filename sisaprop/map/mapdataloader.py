@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
-import StringIO
+#import StringIO
 import re
 import csv
 import os
 import logging
 l = logging.getLogger("mapdataloader")
+
+from io import StringIO
 
 __author__ = 'carlos.coelho'
 
@@ -42,13 +44,20 @@ class MapDataLoader(object):
                 break
 
         # Call loaderfunc with filename as param, return its output value [data as a list] to outside.
-        return loaderfunc(self.filename)
+        try:
+            loaderfunc_retval = loaderfunc(self.filename)
+        except BaseException as e:
+            l.debug("Could not load file [{}]: \"{}\"".format(self.filename, e))
+            # Make loaderfunc's return value be an empty list, just like "noneloader"
+            loaderfunc_retval = []
+
+        return loaderfunc_retval
 
     # --------------
     # Custom Loaders
     # --------------
 
-    def noneloader(self,fn):
+    def noneloader(self, fn):
         return []
 
     def xlsxloader(self, fn):
@@ -56,7 +65,7 @@ class MapDataLoader(object):
             from openpyxl import load_workbook
             import warnings
         except:
-            print "Please install python module OPENPYXL to enable .XLSX Map import."
+            print("Please install python module OPENPYXL to enable .XLSX Map import.")
             return []
 
         # Load XLSX
@@ -69,7 +78,7 @@ class MapDataLoader(object):
         celldata = []
         # Extract data.
         for row in ws.rows:
-            celldata.append([unicode(cell.value if cell.value else u'') for cell in row])
+            celldata.append([str(cell.value) if cell.value else '' for cell in row])
 
         return celldata
 
@@ -78,7 +87,7 @@ class MapDataLoader(object):
             with open(_mapfn, 'rb') as mapfo:
                 mapdata = mapfo.read()
 
-            return StringIO.StringIO(mapdata)
+            return StringIO(mapdata)
 
         mapfileobj = getmapdata(fn)
         csvf = csv.reader(mapfileobj, dialect='excel', delimiter=";", quotechar='"')

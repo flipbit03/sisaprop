@@ -9,7 +9,7 @@ class MapException(Exception):
     """ Exceção simples utilizada apenas dentro da classe Map
         Não é uma excessão de aplicativo, e não é propagada para fora da classe Map.
     """
-    def __init__(self, reason, ln=0):
+    def __init__(self, reason : list, ln=0):
         self.reason = reason
         self.linenumber = ln
 
@@ -33,11 +33,11 @@ class Map(object):
             raise MapException("No data to generate map! [_mapdata and _mapfn are null]")
 
         if _mapdata:
-            self.__mapdata = _mapdata
+            self.mapdata = _mapdata
         else:
             # Instantiate MapDataLoader to fetch us the map data.
             mdl = MapDataLoader(_mapfn)
-            self.__mapdata = mdl.load()
+            self.mapdata = mdl.load()
 
         # DATASTORE: This is where the real loaded and validated map data will be saved.
         self.__map = []
@@ -56,7 +56,7 @@ class Map(object):
             # Valid Shifts
             validshifts = ("ADM", "2TN", "1TN")
 
-            mapline_s = [val.strip() for val in _linedata]
+            mapline_s = [str(val).strip() for val in _linedata]
             retval = [True, mapline_s]
 
             # This is used to validate the first line.
@@ -66,15 +66,17 @@ class Map(object):
             try:
                 try:
                     matr_func, nome_func, apelido_func, nome_apropriador, especialidade, turno, suplentes = mapline_s
-                except:
-                    raise MapException(u"Número de Campos Incorreto", _linenumber)
+                except ValueError as e:
+                    raise MapException((u"Número de Campos Incorreto [{}]".format(e),), _linenumber)
 
                 # First line Validation
                 problems = []
                 if _linenumber == 1:
-                    if _linedata <> first_line:
+                    if _linedata != first_line:
                         problems.append(u"Primeira linha com formato incorreto [Formato: [%s]]"
                                         % (','.join(first_line)))
+
+                        problems.append("piru")
                 else:
 
                     if not matr_func:
@@ -105,14 +107,14 @@ class Map(object):
 
         # Commence Validation
         try:
-            lmd = len(self.__mapdata)
-            if not self.__mapdata:
+            lmd = len(self.mapdata)
+            if not self.mapdata:
                 raise MapException(u"Sem dados para validar no mapa \"{0}\"!".format(self.name))
-            for linenumber, mapline in zip(range(1,lmd+1), self.__mapdata):
+            for linenumber, mapline in zip(range(1,lmd+1), self.mapdata):
                 validate_line(linenumber, mapline)
 
             # Set MAP from MAPDATA, strip header
-            self.__map = self.__mapdata[1:]
+            self.__map = self.mapdata[1:]
         except MapException as e:
             l.debug("Erro: %s" % (e.reason))
             self.__map = []
@@ -136,9 +138,9 @@ class Map(object):
         splitmd = {}
         for k in kvalues:
             # Create a sub-Map()
-            submapname = self.name + u'/' + unicode(k)
+            submapname = self.name + u'/' + str(k)
             # Create submapdata by adding "header" from __mapdata and then filtering the rest of the data.
-            submapdata = [self.__mapdata[0]]+[d for d in md if d[keysorting] == k]
+            submapdata = [self.mapdata[0]] + [d for d in md if d[keysorting] == k]
             splitmd[k] = Map(submapname,_mapdata=submapdata)
 
         return splitmd
@@ -181,8 +183,8 @@ class Map(object):
         # machinesces = "-" character in name.
 
         md_workers = [x for x in md if (x[1].find("*") == -1 and x[1].find("-") == -1)]
-        md_apprentices = [x for x in md if x[1].find("*") <> -1]
-        md_machines = [x for x in md if x[1].find("-") <> -1]
+        md_apprentices = [x for x in md if x[1].find("*") != -1]
+        md_machines = [x for x in md if x[1].find("-") != -1]
 
         # Sort each list by <matr>
         md_workers_sorted = sorted(md_workers, key= lambda x: x[0])

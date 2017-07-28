@@ -11,13 +11,13 @@ from sisaprop.map.mapmanager import MapManager
 from sisaprop.maprenderers.maprendermanager import MapRenderManager
 
 # Importa exceções necessárias SISAPROP
-from appexceptions import SISAPROPEFolderDoesNotExist, SISAPROPNoWorkableMap, SISAPROPNoRenderMethod
+from .appexceptions import SISAPROPEFolderDoesNotExist, SISAPROPNoWorkableMap, SISAPROPNoRenderMethod
 
 # Importa Runner
-from runner import SISAPROP_Runner
+from .runner import SISAPROP_Runner
 
 # Importa funções úteis
-import helpfulfuncs
+from . import helpfulfuncs
 
 l = logging.getLogger("SISAPROP_CmdLineApp")
 
@@ -32,11 +32,11 @@ class SISAPROP_CmdLineApp(object):
         self.possiblerootfolder = args.rootpath
 
         # Nome do mapa desejado [desejado --> real]
-        self.desiredmapname = unicode(args.m)
+        self.desiredmapname = args.m
         self.realmapname = ""
 
         # Método de Renderização [desejado --> real]
-        self.desiredrendermethod = unicode(args.r)
+        self.desiredrendermethod = args.r
         self.realrendermethod = ""
 
         # --
@@ -85,12 +85,12 @@ class SISAPROP_CmdLineApp(object):
         sisaproprunner.run()
 
     def imprime_banner(self):
-        print
-        print u"-----------------------------------------------"
-        print u"-SISAPROP--------------------------------------"
-        print u"-Sistema de Preparação de Mapas de Apropriação-"
-        print u"-----------------------------------------------"
-        print
+        print()
+        print(u"-----------------------------------------------")
+        print(u"-SISAPROP--------------------------------------")
+        print(u"-Sistema de Preparação de Mapas de Apropriação-")
+        print(u"-----------------------------------------------")
+        print()
 
     def verifica_rootfolder(self, rootfolder, mapsfoldername=u"maps", outputsfoldername=u"outputs"):
         if not os.path.exists(rootfolder):
@@ -116,7 +116,7 @@ class SISAPROP_CmdLineApp(object):
 
     def verifica_mapadesejado(self, wantedmapname=u""):
 
-        print u"Pasta dos mapas --> {0:s}\n".format(self.mapsfolder, )
+        print(u"Pasta dos mapas --> {0:s}\n".format(self.mapsfolder, ))
 
         # Cria gerenciador de mapas, usado para listar ou buscar mapas.
         mapmanager = MapManager(self.mapsfolder)
@@ -124,26 +124,28 @@ class SISAPROP_CmdLineApp(object):
         validmaps = mapmanager.getvalidmapnames()
         quotedvalidmaps = [u'\"{0}\"'.format(mn) for mn in validmaps]
 
-        l.debug("Mapas encontrados: %s" % (' '.join(quotedvalidmaps)))
+        if not validmaps:
+            raise SISAPROPNoWorkableMap("Não existem mapas válidos a serem escolhidos.")
+        else:
+            l.info("Mapas encontrados: %s" % (' '.join(quotedvalidmaps)))
 
         if not wantedmapname:
             # Listar mapas disponiveis.
             chosenmapname = helpfulfuncs.chooseoption(validmaps, u"Escolha um Mapa:")
             return chosenmapname
         elif wantedmapname in validmaps:
-            print u"O nome do mapa é \"{0}\"".format(wantedmapname)
+            print(u"O nome do mapa é \"{0}\"".format(wantedmapname))
             return wantedmapname
         else:
-            print u"O mapa de nome \"{0}\" não foi encontrado.".format(wantedmapname)
+            print(u"O mapa de nome \"{0}\" não foi encontrado.".format(wantedmapname))
             return ""
 
     def verifica_rendermethod(self, _mapname, desiredrendermethod):
-        print ""
+        print()
         mprompt = u"Escolha o metodo de renderização para o mapa \"%s" % (_mapname)
 
         # Cria gerenciador de renderização.
         maprendermanager = MapRenderManager()
-
         rendermethods = maprendermanager.getrendermethods()
 
         chosenrendermethod = ""
@@ -152,7 +154,7 @@ class SISAPROP_CmdLineApp(object):
         else:
             chosenrendermethod = desiredrendermethod
 
-        print u"O mapa será renderizado utilizando o plugin \"{0}\".".format(chosenrendermethod)
+        print(u"O mapa será renderizado utilizando o plugin \"{0}\".".format(chosenrendermethod))
 
         return chosenrendermethod
 

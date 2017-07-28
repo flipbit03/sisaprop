@@ -1,7 +1,7 @@
 __author__ = 'carlos.coelho'
 
 import logging
-from nofficemaprenderer import NofficeMapRenderer
+from .nofficemaprenderer import NofficeMapRenderer
 from sisaprop.appexceptions import MapRenderManagerException
 
 l = logging.getLogger("MapRenderManager")
