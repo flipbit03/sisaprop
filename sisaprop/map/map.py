@@ -1,9 +1,10 @@
 # -*- coding: utf8
 
+from typing import List, AnyStr
 import logging
 import csv
-from sisaprop.map.mapdataloader import MapDataLoader
-
+from .mapdataloader import MapDataLoader
+from .mapdatarow import ApropDataRow
 
 class MapException(Exception):
     """ Exceção simples utilizada apenas dentro da classe Map
@@ -56,16 +57,17 @@ class Map(object):
             # Valid Shifts
             validshifts = ("ADM", "2TN", "1TN")
 
-            mapline_s = [str(val).strip() for val in _linedata]
+            mapline_s = ApropDataRow(*[str(val).strip() for val in _linedata])
             retval = [True, mapline_s]
 
             # This is used to validate the first line.
-            first_line = ['matr_func', 'nome_func', 'apelido', 'nome_apropriador',
-                          'especialidade', 'turno', 'suplentes']
+            first_line = ApropDataRow(*['matr_func', 'nome_func', 'apelido', 'nome_apropriador', 'matr_apropriador',
+                          'nome_setor', 'nome_planilha', 'turno', 'suplentes', 'flags'])
 
             try:
                 try:
-                    matr_func, nome_func, apelido_func, nome_apropriador, especialidade, turno, suplentes = mapline_s
+                    matr_func, nome_func, apelido_func, nome_apropriador, matr_apropriador, \
+                    nome_setor, nome_planilha, turno, suplentes, flags = mapline_s
                 except ValueError as e:
                     raise MapException((u"Número de Campos Incorreto [{}]".format(e),), _linenumber)
 
@@ -88,8 +90,8 @@ class Map(object):
                     if not nome_apropriador:
                         problems.append(u"Sem nome de apropriador")
 
-                    if not especialidade:
-                        problems.append(u"Campo \"especialidade\" em branco.")
+                    if not nome_setor:
+                        problems.append(u"Campo \"nome_setor\" em branco.")
 
                     if turno not in validshifts:
                         problems.append(u"Campo \"turno\" com valor inválido.")
@@ -120,9 +122,8 @@ class Map(object):
             self.__map = []
             self.invalid = True
 
-    def getmapdata(self):
-        # Return a COPY of __map using list()
-        return list(self.__map)
+    def getmapdata(self) -> List[ApropDataRow]:
+        return self.__map
 
     def getsplitmapdata(self, keysorting=3):
         if keysorting not in (3,4,5):
@@ -148,31 +149,31 @@ class Map(object):
     def get_apropriadores(self):
         return sorted(list(set([x[3] for x in self.getmapdata() if not self.invalid])))
 
-    def get_especialidades(self):
-        return sorted(list(set([x[4] for x in self.getmapdata() if not self.invalid])))
+    def get_nomesetores(self):
+        return sorted(list(set([x.nome_setor for x in self.getmapdata() if not self.invalid])))
 
     def get_turnos(self):
-        return sorted(list(set([x[5] for x in self.getmapdata() if not self.invalid])))
+        return sorted(list(set([x.turno for x in self.getmapdata() if not self.invalid])))
 
     def get_combinedvalues(self):
-        return self.get_apropriadores(), self.get_especialidades(), self.get_turnos()
+        return self.get_apropriadores(), self.get_nomesetores(), self.get_turnos()
 
-    def get_funcionarios(self, _apropriador="", _especialidade="", _turno=""):
+    def get_funcionarios(self, _apropriador="", _nomesetor="", _turno=""):
 
         # Copy of the map data list.
         md = self.getmapdata()
 
         if _apropriador:
-            md = [e for e in md if e[3] == _apropriador]
+            md = [e for e in md if e.nome_apropriador == _apropriador]
 
-        if _especialidade:
-            md = [e for e in md if e[4] == _especialidade]
+        if _nomesetor:
+            md = [e for e in md if e.nome_setor == _nomesetor]
 
         if _turno:
-            md = [e for e in md if e[5] == _turno]
+            md = [e for e in md if e.turno == _turno]
 
         # Strip additional data, deliver only matr/nome/apelido
-        md = [e[0:3] for e in md]
+        md = [(e.matr_func, e.nome_func, e.apelido) for e in md]
 
         # Convert <matr> to integer, for sorting
         md = [(int(x[0]), x[1], x[2]) for x in md]
@@ -198,29 +199,28 @@ class Map(object):
 
         return joinedlist
 
-    def get_all_funcionarios(self):
+    def get_all_funcionarios(self) -> [List[AnyStr], [AnyStr, AnyStr, AnyStr]]:
 
-        apropriadores, especialidades, turnos = self.get_combinedvalues()
+        apropriadores, nome_setor, turnos = self.get_combinedvalues()
 
-        return [(self.get_funcionarios(apropriador, especialidade, turno), (apropriador, especialidade, turno))
-            for turno in turnos
-            for especialidade in especialidades
-            for apropriador in apropriadores]
+        return [(self.get_funcionarios(_apr, _nmst, _turn), (_apr, _nmst, _turn))
+            for _turn in turnos
+            for _nmst in nome_setor
+            for _apr in apropriadores]
 
-    def get_suplentes(self, _key=('apropriador','especialidade','turno')):
+    def get_suplentes(self, _key=('apropriador','nome_setor','turno')):
 
         # Explode fields
-        _a, _e, _t = _key
+        _a, _ns, _t = _key
 
         # Copy of the map data list.
         md = self.getmapdata()
 
         # Filter
-        filteredmd = [e[6] for e in md if (e[3] == _a and
-                                        e[4] == _e and
-                                        e[5] == _t and
-                                        # suplente is not null
-                                        bool(e[6].strip()))]
+        filteredmd = [e.suplentes for e in md if (e.nome_apropriador == _a and
+                                                  e.nome_setor == _ns and
+                                                  e.turno == _t and
+                                                  bool(e.suplentes.strip()))] # suplentes "is not null"
 
         # No results? Return empty string.
         if not filteredmd:

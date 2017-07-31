@@ -1,6 +1,6 @@
 @echo off 
 
-sisaprop.py -m aprop.xlsx -r noffice -l DEBUG
+py -3 sisaprop.py -m aprop.xlsx -r noffice -l DEBUG
 
 echo ""
 echo ----

@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
-#import StringIO
+__author__ = 'carlos.coelho'
+
+from io import StringIO
 import re
 import csv
 import os
 import logging
 l = logging.getLogger("mapdataloader")
 
-from io import StringIO
-
-__author__ = 'carlos.coelho'
-
+from .mapdatarow import ApropDataRow
 
 class MapDataLoader(object):
     """ Provides the raw data for a Map() object to work in, abstracting filesystem/fileformat from the Map itself.
@@ -78,7 +77,13 @@ class MapDataLoader(object):
         celldata = []
         # Extract data.
         for row in ws.rows:
-            celldata.append([str(cell.value) if cell.value else '' for cell in row])
+            fullrow = ApropDataRow(*[str(cell.value) if cell.value else '' for cell in row])
+
+            # empty row?
+            if not bool(list(filter(None, fullrow))):
+                l.debug("Skipping empty line from worksheet...")
+            else:
+                celldata.append(fullrow)
 
         return celldata
 
