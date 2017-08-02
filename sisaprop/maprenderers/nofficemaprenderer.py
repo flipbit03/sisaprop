@@ -72,11 +72,10 @@ class NofficeMapRenderer(MapRendererBase):
 
         for slice in bigemployeelist:
             employees, params = tuple(slice)
-            apropriador_com_matr, nome_setor_planilha, turno = params
+            apropriador_com_matr, especialidade, nome_planilha , turno = params
 
             nome_apropriador, matr_apropriador = apropriador_com_matr
 
-            especialidade, nome_planilha = nome_setor_planilha
             especialidade = especialidade.replace("\n","")
 
             l.debug("    [slice] > {0:s} {1:s} {2:s}".format(nome_apropriador, especialidade, turno))

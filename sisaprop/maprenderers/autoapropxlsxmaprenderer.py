@@ -19,8 +19,6 @@ class AutoApropXlsxMapRenderer(MapRendererBase):
         l.debug("Map is [{0}]".format(_map))
         l.debug("RenderPath is [{0}]".format(_path))
 
-        _map.get_statistics()
-
         # Split maps by "nome_planilha"
         submaps = _map.getsplitmapdata(keysorting='nome_planilha')
 
@@ -46,11 +44,9 @@ class AutoApropXlsxMapRenderer(MapRendererBase):
 
         for slice in bigemployeelist:
             employees, params = tuple(slice)
-            apropriador_com_matr, nome_setor_planilha, turno = params
+            apropriador_com_matr, nome_setor, nome_planilha, turno = params
 
             nome_apropriador, matr_apropriador = apropriador_com_matr
-
-            nome_setor, nome_planilha = nome_setor_planilha
 
             l.debug("    [slice] > {0:s} {1:s} {2:s}".format(nome_apropriador, nome_setor, turno))
 
@@ -74,13 +70,18 @@ class AutoApropXlsxMapRenderer(MapRendererBase):
                 renderdict["##NOME{}##".format(empcount)] = _empnome
                 renderdict["##MATR{}##".format(empcount)] = _empmatr
 
-            # Get flags for this submap
-            flags = _map.get_flags_for(nome_planilha=nome_planilha)
+            # Get submap_flags for this submap
+            submap_flags = _map.get_flags_for(nome_planilha=nome_planilha)
 
-            # Choose model from employeecount
+            # Choose model from employeecount and from submap_flags
             xlsxtemplate = AutoApropModeloSemanal
             if len(employees) > 6:
-                xlsxtemplate = AutoApropModeloDiario
+
+                # If we want administrativo-only template
+                if "administrativo" in submap_flags:
+                    xlsxtemplate = AutoApropModeloDiarioAdministrativo
+                else:
+                    xlsxtemplate = AutoApropModeloDiario
 
             try:
                 # Render

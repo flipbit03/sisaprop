@@ -157,25 +157,32 @@ class Map(object):
     def get_apropriadores_matr(self):
         return sorted(list(set([(x.nome_apropriador, x.matr_apropriador) for x in self.getmapdata() if not self.invalid])))
 
+    def get_nomesetores(self):
+        return sorted(list(set([x.nome_setor for x in self.getmapdata() if not self.invalid])))
+
+    def get_nomeplanilhas(self):
+        return sorted(list(set([x.nome_planilha for x in self.getmapdata() if not self.invalid])))
+
     def get_nomesetores_nomeplanilha(self):
         return sorted(list(set([(x.nome_setor, x.nome_planilha) for x in self.getmapdata() if not self.invalid])))
 
     def get_turnos(self):
         return sorted(list(set([x.turno for x in self.getmapdata() if not self.invalid])))
 
-    def get_combinedvalues(self):
-        return self.get_apropriadores_matr(), self.get_nomesetores_nomeplanilha(), self.get_turnos()
-
-    def get_funcionarios(self, _apropriador_matr=("nome", "matr"), _nomesetor_planilha=("nomesetor", "nomeplanilha"), _turno=""):
+    def get_funcionarios(self, _apropriador_matr=None, _nomesetor=None, _nome_planilha=None, _turno=None):
 
         # Copy of the map data list.
         md = self.getmapdata()
 
         if _apropriador_matr:
-            md = [e for e in md if e.nome_apropriador == _apropriador_matr[0]]
+            md = [e for e in md if (e.nome_apropriador == _apropriador_matr[0] and
+                                    e.matr_apropriador == _apropriador_matr[1])]
 
-        if _nomesetor_planilha:
-            md = [e for e in md if e.nome_setor == _nomesetor_planilha[0]]
+        if _nomesetor:
+            md = [e for e in md if e.nome_setor == _nomesetor]
+
+        if _nome_planilha:
+            md = [e for e in md if e.nome_planilha == _nome_planilha]
 
         if _turno:
             md = [e for e in md if e.turno == _turno]
@@ -204,24 +211,24 @@ class Map(object):
 
     def get_all_funcionarios(self) -> [List[Tuple[AnyStr]], [AnyStr, AnyStr, AnyStr]]:
 
-        apropriadores_matr, nome_setor_planilha, turnos = self.get_combinedvalues()
+        return [(self.get_funcionarios(_apr_matr, _nomesetor, _nomeplanilha, _turno),
+                 (_apr_matr, _nomesetor, _nomeplanilha, _turno))
+            for _apr_matr in self.get_apropriadores_matr()
+            for _nomesetor in self.get_nomesetores()
+            for _nomeplanilha in self.get_nomeplanilhas()
+            for _turno in self.get_turnos()]
 
-        return [(self.get_funcionarios(_apr_matr, _nmst_planlh, _turn), (_apr_matr, _nmst_planlh, _turn))
-            for _turn in turnos
-            for _nmst_planlh in nome_setor_planilha
-            for _apr_matr in apropriadores_matr]
-
-    def get_suplentes(self, _key=('apropriador','nome_setor','turno')):
+    def get_suplentes(self, _key=('apropriador', 'nome_setor', 'nome_planilha', 'turno')):
 
         # Explode fields
-        _a, _ns, _t = _key
+        _a, _ns, _np, _t = _key
 
         # Copy of the map data list.
         md = self.getmapdata()
 
         # Filter
         filteredmd = [e.suplentes for e in md if (e.nome_apropriador == _a[0] and
-                                                  e.nome_setor == _ns[0] and
+                                                  e.nome_setor == _ns and
                                                   e.turno == _t and
                                                   bool(e.suplentes.strip()))] # suplentes "is not null"
 
@@ -240,5 +247,11 @@ class Map(object):
 
     def get_flags_for(self, nome_planilha=""):
 
+        # Return the list of all flags from this _nome_planilha
+        return list(
+            set(
+            filter(None, [x[3] for x in self.get_funcionarios(_nome_planilha=nome_planilha)])
+            )
+        )
 
         pass
