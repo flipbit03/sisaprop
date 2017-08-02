@@ -56,8 +56,8 @@ class NofficeMapRenderer(MapRendererBase):
         # Create a new NOffice Document
         nod = noffice.NOfficeDoc(docname=_mapname)
 
-        # Get the full list of employees separated by params (apropriador, especialidade, turno)
-        # [ ((matr, nome, nickname)[1..n], (apropriador, especialidade, turno))
+        # Get the full list of employees separated by params (nome_apropriador, especialidade, turno)
+        # [ ((matr, nome, nickname)[1..n], (nome_apropriador, especialidade, turno))
         bigemployeelist = _map.get_all_funcionarios()
 
         l.debug("  [sub] map {0} has {1} slice(s).".format(_mapname, len(bigemployeelist)))
@@ -72,20 +72,24 @@ class NofficeMapRenderer(MapRendererBase):
 
         for slice in bigemployeelist:
             employees, params = tuple(slice)
-            apropriador, especialidade, turno = params
+            apropriador_com_matr, nome_setor_planilha, turno = params
+
+            nome_apropriador, matr_apropriador = apropriador_com_matr
+
+            especialidade, nome_planilha = nome_setor_planilha
             especialidade = especialidade.replace("\n","")
 
-            l.debug("    [slice] > {0:s} {1:s} {2:s}".format(apropriador, especialidade, turno))
+            l.debug("    [slice] > {0:s} {1:s} {2:s}".format(nome_apropriador, especialidade, turno))
 
             # Helper functions
             def append_sheet():
                 output_apropsheets.append(
-                    (noffice.ApropMapSheet(especialidade=especialidade, turno=turno, nome=apropriador),
+                    (noffice.ApropMapSheet(especialidade=especialidade, turno=turno, nome=nome_apropriador),
                      []))
 
             def append_draft():
                 output_apropdrafts.append(
-                    (noffice.ApropMapDraft(especialidade=especialidade, turno=turno, nome=apropriador),
+                    (noffice.ApropMapDraft(especialidade=especialidade, turno=turno, nome=nome_apropriador),
                      []))
 
             def allocworker_sheet(_matr, _workername):
@@ -109,7 +113,7 @@ class NofficeMapRenderer(MapRendererBase):
             # Start allocating employees (popping from a copy)
             employees_copy = list(employees)
             while employees_copy:
-                matr, name, nickname = employees_copy.pop(0)
+                matr, name, nickname, FLAGS = employees_copy.pop(0)
                 workersheetname = name
                 if nickname:
                     workersheetname = nickname
