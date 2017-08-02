@@ -2,6 +2,7 @@ __author__ = 'carlos.coelho'
 
 import logging
 from .nofficemaprenderer import NofficeMapRenderer
+from .autoapropxlsxmaprenderer import AutoApropXlsxMapRenderer
 from sisaprop.appexceptions import MapRenderManagerException
 
 l = logging.getLogger("MapRenderManager")
@@ -9,7 +10,8 @@ l = logging.getLogger("MapRenderManager")
 class MapRenderManager(object):
     def __init__(self):
         self.rendermethods = {
-            "noffice" : NofficeMapRenderer
+            "noffice": NofficeMapRenderer,
+            "autoapropxlsx": AutoApropXlsxMapRenderer
         }
 
     def getrendermethods(self):
