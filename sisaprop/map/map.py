@@ -1,6 +1,6 @@
 # -*- coding: utf8
 
-from typing import List, AnyStr
+from typing import List, Tuple, AnyStr
 import logging
 import csv
 from .mapdataloader import MapDataLoader
@@ -97,6 +97,9 @@ class Map(object):
                         problems.append(u"Campo \"turno\" com valor inválido.")
                         problems.append(u"(Turnos válidos = %s)" % ('/'.join(validshifts)))
 
+                    if nome_planilha.find("\n") != -1:
+                        problems.append("Tem newline no nome da planilha...")
+
                 # Raise exception if any problems found.
                 if problems:
                     raise MapException(problems, _linenumber)
@@ -125,15 +128,20 @@ class Map(object):
     def getmapdata(self) -> List[ApropDataRow]:
         return self.__map
 
-    def getsplitmapdata(self, keysorting=3):
-        if keysorting not in (3,4,5):
-            raise MapException("Invalid SplitMapData Key={0} (Valid Keys=3/4/5)".format(keysorting))
+    def getsplitmapdata(self, keysorting='nome_apropriador'):
+        valid_keysort_values = [
+            'nome_apropriador',
+            'nome_planilha'
+        ]
+
+        if keysorting not in valid_keysort_values:
+            raise MapException("Invalid SplitMapData Key={} (Valid Keys={})".format(keysorting, valid_keysort_values))
 
         # Map COPY
         md = self.getmapdata()
 
         # Get a list of deduplicated values from md[keysorting], then sort it.
-        kvalues = list(set(map(lambda x: x[keysorting],md)))
+        kvalues = list(set(map(lambda x: getattr(x, keysorting), md)))
         kvalues.sort()
 
         splitmd = {}
@@ -141,47 +149,42 @@ class Map(object):
             # Create a sub-Map()
             submapname = self.name + u'/' + str(k)
             # Create submapdata by adding "header" from __mapdata and then filtering the rest of the data.
-            submapdata = [self.mapdata[0]] + [d for d in md if d[keysorting] == k]
-            splitmd[k] = Map(submapname,_mapdata=submapdata)
+            submapdata = [self.mapdata[0]] + [d for d in md if getattr(d, keysorting) == k]
+            splitmd[k] = Map(submapname, _mapdata=submapdata)
 
         return splitmd
 
-    def get_apropriadores(self):
-        return sorted(list(set([x[3] for x in self.getmapdata() if not self.invalid])))
+    def get_apropriadores_matr(self):
+        return sorted(list(set([(x.nome_apropriador, x.matr_apropriador) for x in self.getmapdata() if not self.invalid])))
 
-    def get_nomesetores(self):
-        return sorted(list(set([x.nome_setor for x in self.getmapdata() if not self.invalid])))
+    def get_nomesetores_nomeplanilha(self):
+        return sorted(list(set([(x.nome_setor, x.nome_planilha) for x in self.getmapdata() if not self.invalid])))
 
     def get_turnos(self):
         return sorted(list(set([x.turno for x in self.getmapdata() if not self.invalid])))
 
     def get_combinedvalues(self):
-        return self.get_apropriadores(), self.get_nomesetores(), self.get_turnos()
+        return self.get_apropriadores_matr(), self.get_nomesetores_nomeplanilha(), self.get_turnos()
 
-    def get_funcionarios(self, _apropriador="", _nomesetor="", _turno=""):
+    def get_funcionarios(self, _apropriador_matr=("nome", "matr"), _nomesetor_planilha=("nomesetor", "nomeplanilha"), _turno=""):
 
         # Copy of the map data list.
         md = self.getmapdata()
 
-        if _apropriador:
-            md = [e for e in md if e.nome_apropriador == _apropriador]
+        if _apropriador_matr:
+            md = [e for e in md if e.nome_apropriador == _apropriador_matr[0]]
 
-        if _nomesetor:
-            md = [e for e in md if e.nome_setor == _nomesetor]
+        if _nomesetor_planilha:
+            md = [e for e in md if e.nome_setor == _nomesetor_planilha[0]]
 
         if _turno:
             md = [e for e in md if e.turno == _turno]
 
         # Strip additional data, deliver only matr/nome/apelido
-        md = [(e.matr_func, e.nome_func, e.apelido) for e in md]
+        md = [(e.matr_func, e.nome_func, e.apelido, e.flags) for e in md]
 
         # Convert <matr> to integer, for sorting
-        md = [(int(x[0]), x[1], x[2]) for x in md]
-
-
-        # Get list and split it in "workers" and "apprentices" and "machines"
-        # apprentices = "*" character in name.
-        # machinesces = "-" character in name.
+        md = [(int(x[0]), x[1], x[2], x[3]) for x in md]
 
         md_workers = [x for x in md if (x[1].find("*") == -1 and x[1].find("-") == -1)]
         md_apprentices = [x for x in md if x[1].find("*") != -1]
@@ -195,18 +198,18 @@ class Map(object):
         joinedlist = md_workers_sorted + md_apprentices_sorted + md_machines_sorted
 
         # Convert <matr> back to String
-        joinedlist = [(str(x[0]), x[1], x[2]) for x in joinedlist]
+        joinedlist = [(str(x[0]), x[1], x[2], x[3]) for x in joinedlist]
 
         return joinedlist
 
-    def get_all_funcionarios(self) -> [List[AnyStr], [AnyStr, AnyStr, AnyStr]]:
+    def get_all_funcionarios(self) -> [List[Tuple[AnyStr]], [AnyStr, AnyStr, AnyStr]]:
 
-        apropriadores, nome_setor, turnos = self.get_combinedvalues()
+        apropriadores_matr, nome_setor_planilha, turnos = self.get_combinedvalues()
 
-        return [(self.get_funcionarios(_apr, _nmst, _turn), (_apr, _nmst, _turn))
+        return [(self.get_funcionarios(_apr_matr, _nmst_planlh, _turn), (_apr_matr, _nmst_planlh, _turn))
             for _turn in turnos
-            for _nmst in nome_setor
-            for _apr in apropriadores]
+            for _nmst_planlh in nome_setor_planilha
+            for _apr_matr in apropriadores_matr]
 
     def get_suplentes(self, _key=('apropriador','nome_setor','turno')):
 
@@ -217,14 +220,14 @@ class Map(object):
         md = self.getmapdata()
 
         # Filter
-        filteredmd = [e.suplentes for e in md if (e.nome_apropriador == _a and
-                                                  e.nome_setor == _ns and
+        filteredmd = [e.suplentes for e in md if (e.nome_apropriador == _a[0] and
+                                                  e.nome_setor == _ns[0] and
                                                   e.turno == _t and
                                                   bool(e.suplentes.strip()))] # suplentes "is not null"
 
         # No results? Return empty string.
         if not filteredmd:
-            return u''
+            return ''
 
         # Results? Sort and return the first element, ignore the rest.
         sortedmd = sorted(filteredmd)
@@ -234,3 +237,8 @@ class Map(object):
         data = self.get_all_funcionarios()
         stats = [(entry[1], len(entry[0]), self.get_suplentes(_key=entry[1])) for entry in data if len(entry[0]) > 0]
         return stats
+
+    def get_flags_for(self, nome_planilha=""):
+
+
+        pass
