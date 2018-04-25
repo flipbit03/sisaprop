@@ -10,19 +10,43 @@ l = logging.getLogger("mapdataloader")
 
 from .mapdatarow import ApropDataRow
 
+def generate_flags_for_row(nome_planilha):
+    # Dynamically generate some flags depending on "nome_planilha"
+    flaglist = {
+        # teste
+        'IM_1': 'administrativo',
+        # prod
+        'IE-CEP': 'administrativo',
+        'IE-CES': 'administrativo',
+        'IE-CPR': 'administrativo',
+        'IEI': 'administrativo',
+        'IG': 'administrativo',
+    }
+
+    try:
+        return flaglist[nome_planilha]
+    except:
+        return ""
+
 class MapDataLoader(object):
     """ Provides the raw data for a Map() object to work in, abstracting filesystem/fileformat from the Map itself.
     """
-    def __init__(self, _filename):
+    def __init__(self, _filename, _tools: dict = None):
+
+        # Save tools
+        self.tools = _tools
 
         # This map matches os.path.basename(filename) against the specific data loaders supported by this module.
-        self.loadabletypes = {# Ignore opened .xlsx backups
-                                r"^\~\$.+\.xlsx$": self.noneloader,
-                              # XLSX Loader
-                                r"\.xlsx$": self.xlsxloader,
-                              # CSV Loader
-                                r"\.csv$": self.csvloader }
-
+        self.loadabletypes = {
+            # Ignore opened .xlsx backups
+            r"^\~\$.+\.xlsx$": self.noneloader,
+            # XLSX Loader
+            r"\.xlsx$": self.xlsxloader,
+            # CSV Loader
+            r"\.csv$": self.csvloader,
+            # SisapropHelperLoader
+            r"^sisaprophelper#": self.sisaprophelperloader
+            }
 
         # Save the filename
         self.filename = _filename
@@ -58,6 +82,47 @@ class MapDataLoader(object):
 
     def noneloader(self, fn):
         return []
+
+    def sisaprophelperloader(self, fn):
+
+
+
+        # use subprocess to generate data
+        import subprocess
+
+        subp = subprocess.run((self.tools['sisaprophelper'],), stdout=subprocess.PIPE)
+        data = subp.stdout # type: bytes
+
+        # Strip and split all data
+        stripsplitdata = [[y.strip() for y in x.split("|")] for x in data.decode("utf8").strip().split('\r\n')]
+
+        # Get map data from aprop
+        celldata = []
+
+        # Add first row as HEADER
+        dataheader = ApropDataRow(*['matr_func', 'nome_func', 'apelido', 'nome_apropriador', 'matr_apropriador',
+                                    'nome_setor', 'nome_planilha', 'turno', 'suplentes', 'flags'])
+        celldata.append(dataheader)
+
+        # Iterate over data
+        for row in stripsplitdata:
+            matr_func, nome_func, _, _, matr_apropriador, nome_apropriador, \
+            nome_planilha, _nome_setor = row
+
+            # Split nome_setor by "--"
+            nome_setor = _nome_setor.replace('--', '\r\n')
+
+            # Create some fields
+            turno = "ADM"
+            suplentes = ""
+            flags = generate_flags_for_row(nome_planilha)
+
+            newdatarow = ApropDataRow(matr_func, nome_func, "", nome_apropriador, matr_apropriador,
+                                      nome_setor, nome_planilha, turno, suplentes, flags)
+
+            celldata.append(newdatarow)
+
+        return celldata
 
     def xlsxloader(self, fn):
         try:

@@ -18,10 +18,13 @@ class MapException(Exception):
 class Map(object):
     """ Load a Map, either from a list (_mapdata) or from a filename (_mapfn)
     """
-    def __init__(self, _mapname, _mapdata=[], _mapfn=u""):
+    def __init__(self, _mapname, _mapdata=[], _mapfn=u"", _tools: dict = None):
 
         # Create logger entry for this map
         self.logger = logging.getLogger("map(%s)" % (_mapname,))
+
+        # Save tools
+        self.tools = _tools
 
         # Save map name
         self.name = _mapname
@@ -37,7 +40,7 @@ class Map(object):
             self.mapdata = _mapdata
         else:
             # Instantiate MapDataLoader to fetch us the map data.
-            mdl = MapDataLoader(_mapfn)
+            mdl = MapDataLoader(_mapfn, _tools=self.tools)
             self.mapdata = mdl.load()
 
         # DATASTORE: This is where the real loaded and validated map data will be saved.
@@ -78,7 +81,6 @@ class Map(object):
                         problems.append(u"Primeira linha com formato incorreto [Formato: [%s]]"
                                         % (','.join(first_line)))
 
-                        problems.append("piru")
                 else:
 
                     if not matr_func:

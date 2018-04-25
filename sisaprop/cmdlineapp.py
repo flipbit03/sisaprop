@@ -53,7 +53,13 @@ class SISAPROP_CmdLineApp(object):
         #                           also derived from "self.possiblerootfolder"
         # self.mapsfolder       =   folder which contains the employee maps.
         # self.outputsfolder    =   folder that will house generated files.
-        self.rootfolder, self.mapsfolder, self.outputsfolder = self.verifica_rootfolder(self.possiblerootfolder)
+        self.rootfolder, self.toolsfolder, \
+        self.mapsfolder, self.outputsfolder = self.verifica_rootfolder(self.possiblerootfolder)
+
+        # Cria toolsdict
+        self.tools = {}
+        self.tools['sisaprophelper'] = os.path.join(self.toolsfolder, 'SisapropHelper.exe')
+
         # Exclui "possiblerootfolder", pois não é mais necessário.
         del self.possiblerootfolder
 
@@ -81,7 +87,8 @@ class SISAPROP_CmdLineApp(object):
         # (4) Método de renderização definido (self.realrendermethod).
         #
         # Podemos então gerar as saídas desejadas.
-        sisaproprunner = SISAPROP_Runner(self.mapsfolder, self.outputsfolder, self.realmapname, self.realrendermethod)
+        sisaproprunner = SISAPROP_Runner(self.mapsfolder, self.tools,
+                                         self.outputsfolder, self.realmapname, self.realrendermethod)
         sisaproprunner.run()
 
     def imprime_banner(self):
@@ -92,7 +99,10 @@ class SISAPROP_CmdLineApp(object):
         print(u"-----------------------------------------------")
         print()
 
-    def verifica_rootfolder(self, rootfolder, mapsfoldername=u"maps", outputsfoldername=u"outputs"):
+    def verifica_rootfolder(self, rootfolder,
+                            toolsfoldername=u"tools",
+                            mapsfoldername=u"maps",
+                            outputsfoldername=u"outputs"):
         if not os.path.exists(rootfolder):
             raise SISAPROPEFolderDoesNotExist(u"Pasta %s não existe" % (rootfolder,))
 
@@ -111,15 +121,20 @@ class SISAPROP_CmdLineApp(object):
             l.debug(u"Criando pasta \"%s\"..." % (outputsfoldername,))
             os.mkdir(outputs_folder)
 
+        tools_folder = os.path.join(absrootfolder, toolsfoldername)
+        if not os.path.exists(tools_folder):
+            l.debug(u"Criando pasta \"%s\"..." % (toolsfoldername,))
+            os.mkdir(tools_folder)
+
         # Retorna tupla (absrootfolder, maps_folder, outputs_folder)
-        return (absrootfolder, maps_folder, outputs_folder)
+        return (absrootfolder, tools_folder, maps_folder, outputs_folder)
 
     def verifica_mapadesejado(self, wantedmapname=u""):
 
         print(u"Pasta dos mapas --> {0:s}\n".format(self.mapsfolder, ))
 
         # Cria gerenciador de mapas, usado para listar ou buscar mapas.
-        mapmanager = MapManager(self.mapsfolder)
+        mapmanager = MapManager(self.mapsfolder, tools=self.tools)
 
         validmaps = mapmanager.getvalidmapnames()
         quotedvalidmaps = [u'\"{0}\"'.format(mn) for mn in validmaps]

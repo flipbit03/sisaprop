@@ -14,7 +14,7 @@ from sisaprop.maprenderers.maprendermanager import MapRenderManager
 l = logging.getLogger("SISAPROP_Runner")
 
 class SISAPROP_Runner(object):
-    def __init__(self, _mapsfolder, _outputsfolder, _mapname, _rendermethod):
+    def __init__(self, _mapsfolder, _tools: dict, _outputsfolder, _mapname, _rendermethod):
         # A partir deste ponto, possuimos:
         # (2) rootfolder / mapsfolder / outputsfolder reais e válidos
         #
@@ -26,6 +26,9 @@ class SISAPROP_Runner(object):
         # Podemos então gerar as saídas desejadas.
 
         self.mapsfolder = _mapsfolder
+
+        self.tools = _tools
+
         self.outputsfolder = _outputsfolder
         self.mapname = _mapname
         self.rendermethod = _rendermethod
@@ -34,7 +37,7 @@ class SISAPROP_Runner(object):
         l.debug(u"Map name = {0}".format(self.mapname))
 
         # Init MapManager
-        mapmanager = MapManager(self.mapsfolder)
+        mapmanager = MapManager(self.mapsfolder, tools=self.tools)
 
         # Get Worker Map
         workermap = mapmanager.getmap(self.mapname)

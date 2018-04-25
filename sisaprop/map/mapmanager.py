@@ -9,9 +9,12 @@ import logging
 l = logging.getLogger("mapmanager")
 
 class MapManager(object):
-    def __init__(self, mappath):
+    def __init__(self, mappath, tools: dict):
         # Save mappath
         self.mappath = mappath
+
+        # Save tools
+        self.tools = tools
 
         # Populate valid map dict with instances of APROPMap
         self.validmaps = self.__getvalidmaps()
@@ -24,12 +27,15 @@ class MapManager(object):
         dirlst = os.listdir(self.mappath)
         mapfilenamelist = [os.path.join(self.mappath, fn) for fn in dirlst]
 
+        # Add an entry for SisapropHelper
+        mapfilenamelist.append("sisaprophelper#autoaprop")
+
         # Iterate over each .csv file trying to import valid ones.
         for mapfn in mapfilenamelist:
             mapname = os.path.basename(mapfn)
 
             l.debug(u"Carregando mapa %s..." % (mapfn,))
-            newmap = Map(mapname, _mapfn=mapfn)
+            newmap = Map(mapname, _mapfn=mapfn, _tools=self.tools)
 
             if not newmap.invalid:
                 l.debug(u"Mapa \"%s\" é válido!" % (newmap.name,))
