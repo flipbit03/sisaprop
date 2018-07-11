@@ -22,6 +22,9 @@ class AutoApropXlsxMapRenderer(MapRendererBase):
         # Split maps by "nome_planilha"
         submaps = _map.getsplitmapdata(keysorting='nome_planilha')
 
+        # Dumplist
+        self.dumplist = []
+
         l.debug("{0} submap(s) to render from map...".format(len(submaps)))
         for submapname in submaps:
             rendersubmapname = submapname.split(u'/')[-1].lower()
@@ -36,6 +39,9 @@ class AutoApropXlsxMapRenderer(MapRendererBase):
             l.debug("Rendering submap \"{0}\".".format(submapname))
             self.rendereachmap(submaps[submapname], rendersubmapname, renderfilename)
             l.debug(" ")
+
+        l.info("Generating dump list...")
+        self.generate_dumplist(_path)
 
     def rendereachmap(self, _map : Map, _mapname, _renderfilepath):
         assert isinstance(_map, Map)
@@ -70,6 +76,12 @@ class AutoApropXlsxMapRenderer(MapRendererBase):
                 renderdict["##NOME{}##".format(empcount)] = _empnome
                 renderdict["##MATR{}##".format(empcount)] = _empmatr
 
+                # Populate Dumplist
+                self.dumplist.append(
+                    (nome_setor.replace('\r\n','--'), nome_planilha, nome_apropriador,
+                     matr_apropriador, _empmatr, _nome, _apelido, _flags)
+                )
+
             # Get submap_flags for this submap
             submap_flags = _map.get_flags_for(nome_planilha=nome_planilha)
 
@@ -89,3 +101,9 @@ class AutoApropXlsxMapRenderer(MapRendererBase):
             except AutoApropException as e:
                 l.error("Erro renderizando XLSX[{}]: Pulando render de {}".format(xlsxtemplate, _renderfilepath))
                 print(e)
+
+    def generate_dumplist(self, _path: str):
+        renderfilename = os.path.join(_path, "dumplist.txt")
+        f = open(renderfilename, 'w')
+        f.write('\n'.join([str(x) for x in self.dumplist]))
+
