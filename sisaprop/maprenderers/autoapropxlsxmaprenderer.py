@@ -105,5 +105,8 @@ class AutoApropXlsxMapRenderer(MapRendererBase):
     def generate_dumplist(self, _path: str):
         renderfilename = os.path.join(_path, "dumplist.txt")
         f = open(renderfilename, 'w')
-        f.write('\n'.join([str(x) for x in self.dumplist]))
+
+        emplist = sorted([str(x) for x in self.dumplist])
+
+        f.write('\n'.join(emplist))
 
