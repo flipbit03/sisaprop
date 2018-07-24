@@ -247,13 +247,12 @@ class Map(object):
         stats = [(entry[1], len(entry[0]), self.get_suplentes(_key=entry[1])) for entry in data if len(entry[0]) > 0]
         return stats
 
-    def get_flags_for(self, nome_planilha=""):
+    def get_flags_for(self, nome_planilha: str=""):
+
+        flaglist = list(set(filter(None, [x[3] for x in self.get_funcionarios(_nome_planilha=nome_planilha)])))
+
+        if nome_planilha.find('*') != -1:
+            flaglist.append("diario")
 
         # Return the list of all flags from this _nome_planilha
-        return list(
-            set(
-            filter(None, [x[3] for x in self.get_funcionarios(_nome_planilha=nome_planilha)])
-            )
-        )
-
-        pass
+        return flaglist

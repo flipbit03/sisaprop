@@ -1,5 +1,7 @@
 __author__ = 'carlos.coelho'
 
+import re
+
 import logging
 import os
 import zipfile
@@ -30,6 +32,7 @@ class AutoApropXlsxMapRenderer(MapRendererBase):
             rendersubmapname = submapname.split(u'/')[-1].lower()
             assert isinstance(rendersubmapname, str)
             rendersubmapname = rendersubmapname.replace(u'.',u'') + u'.xlsx'
+            rendersubmapname = rendersubmapname.replace(u'*',u'')
 
             # Get filename from rendersubmapname
             renderfilename = os.path.join(_path, rendersubmapname.upper())
@@ -43,6 +46,11 @@ class AutoApropXlsxMapRenderer(MapRendererBase):
         l.info("Generating dump list...")
         self.generate_dumplist(_path)
 
+    @staticmethod
+    def fix_nomeplanilha(nomeplanilha: str):
+        # Strip unwanted characters
+        return re.sub(r'\*', '', nomeplanilha)
+
     def rendereachmap(self, _map : Map, _mapname, _renderfilepath):
         assert isinstance(_map, Map)
 
@@ -50,7 +58,10 @@ class AutoApropXlsxMapRenderer(MapRendererBase):
 
         for slice in bigemployeelist:
             employees, params = tuple(slice)
-            apropriador_com_matr, nome_setor, nome_planilha, turno = params
+            apropriador_com_matr, nome_setor, nome_planilha_orig, turno = params
+
+            # Fix nome_planilha if it has some flags ('*' = administrativo)
+            nome_planilha = self.fix_nomeplanilha(nome_planilha_orig)
 
             nome_apropriador, matr_apropriador = apropriador_com_matr
 
@@ -83,12 +94,15 @@ class AutoApropXlsxMapRenderer(MapRendererBase):
                 )
 
             # Get submap_flags for this submap
-            submap_flags = _map.get_flags_for(nome_planilha=nome_planilha)
+            submap_flags = _map.get_flags_for(nome_planilha=nome_planilha_orig)
 
             # Choose model from employeecount and from submap_flags
             xlsxtemplate = AutoApropModeloSemanal
-            if len(employees) > 6:
 
+            if "diario" in submap_flags:
+                print(u"    OBS: Mapa {} solicitou MODELO DIARIO...".format(nome_planilha))
+                xlsxtemplate = AutoApropModeloDiario
+            elif len(employees) > 6:
                 # If we want administrativo-only template
                 if "administrativo" in submap_flags:
                     xlsxtemplate = AutoApropModeloDiarioAdministrativo
