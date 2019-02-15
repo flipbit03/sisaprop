@@ -11,22 +11,16 @@ l = logging.getLogger("mapdataloader")
 from .mapdatarow import ApropDataRow
 
 def generate_flags_for_row(nome_planilha):
-    # Dynamically generate some flags depending on "nome_planilha"
-    flaglist = {
-        # teste
-        'IM_1': 'administrativo',
-        # prod
-        'IE-CEP': 'administrativo',
-        'IE-CES': 'administrativo',
-        'IE-CPR': 'administrativo',
-        'IEI': 'administrativo',
-        'IG': 'administrativo',
-    }
+    def found(t: str, w: str):
+        return t.find(w) != -1
 
-    try:
-        return flaglist[nome_planilha]
-    except:
-        return ""
+    if found(nome_planilha, '!'):
+        return 'administrativo'
+
+    if found(nome_planilha, '*'):
+        return 'diario'
+
+    return ""
 
 class MapDataLoader(object):
     """ Provides the raw data for a Map() object to work in, abstracting filesystem/fileformat from the Map itself.
@@ -84,14 +78,11 @@ class MapDataLoader(object):
         return []
 
     def sisaprophelperloader(self, fn):
-
-
-
         # use subprocess to generate data
         import subprocess
 
         subp = subprocess.run((self.tools['sisaprophelper'],), stdout=subprocess.PIPE)
-        data = subp.stdout # type: bytes
+        data = subp.stdout  # type: bytes
 
         # Strip and split all data
         stripsplitdata = [[y.strip() for y in x.split("|")] for x in data.decode("utf8").strip().split('\r\n')]

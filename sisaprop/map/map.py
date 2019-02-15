@@ -251,8 +251,5 @@ class Map(object):
 
         flaglist = list(set(filter(None, [x[3] for x in self.get_funcionarios(_nome_planilha=nome_planilha)])))
 
-        if nome_planilha.find('*') != -1:
-            flaglist.append("diario")
-
         # Return the list of all flags from this _nome_planilha
         return flaglist

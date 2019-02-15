@@ -32,7 +32,7 @@ class AutoApropXlsxMapRenderer(MapRendererBase):
             rendersubmapname = submapname.split(u'/')[-1].lower()
             assert isinstance(rendersubmapname, str)
             rendersubmapname = rendersubmapname.replace(u'.',u'') + u'.xlsx'
-            rendersubmapname = rendersubmapname.replace(u'*',u'')
+            rendersubmapname = self.fix_nomeplanilha(rendersubmapname)
 
             # Get filename from rendersubmapname
             renderfilename = os.path.join(_path, rendersubmapname.upper())
@@ -49,7 +49,9 @@ class AutoApropXlsxMapRenderer(MapRendererBase):
     @staticmethod
     def fix_nomeplanilha(nomeplanilha: str):
         # Strip unwanted characters
-        return re.sub(r'\*', '', nomeplanilha)
+        n = re.sub(r'\*', '', nomeplanilha)
+        n = re.sub(r'!', '', n)
+        return n
 
     def rendereachmap(self, _map : Map, _mapname, _renderfilepath):
         assert isinstance(_map, Map)
@@ -100,7 +102,6 @@ class AutoApropXlsxMapRenderer(MapRendererBase):
             xlsxtemplate = AutoApropModeloSemanal
 
             if "diario" in submap_flags:
-                print(u"    OBS: Mapa {} solicitou MODELO DIARIO...".format(nome_planilha))
                 xlsxtemplate = AutoApropModeloDiario
             elif len(employees) > 6:
                 # If we want administrativo-only template
