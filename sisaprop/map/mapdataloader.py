@@ -92,12 +92,14 @@ class MapDataLoader(object):
 
         # Add first row as HEADER
         dataheader = ApropDataRow(*['matr_func', 'nome_func', 'apelido', 'nome_apropriador', 'matr_apropriador',
+                                    'nome_responsavel', 'matr_responsavel',
                                     'nome_setor', 'nome_planilha', 'turno', 'suplentes', 'flags'])
         celldata.append(dataheader)
 
         # Iterate over data
         for row in stripsplitdata:
-            matr_func, nome_func, _, _, matr_apropriador, nome_apropriador, \
+            matr_func, nome_func, _, _, \
+            matr_apropriador, nome_apropriador, matr_responsavel, nome_responsavel, \
             nome_planilha, _nome_setor = row
 
             # Split nome_setor by "--"
@@ -108,7 +110,9 @@ class MapDataLoader(object):
             suplentes = ""
             flags = generate_flags_for_row(nome_planilha)
 
-            newdatarow = ApropDataRow(matr_func, nome_func, "", nome_apropriador, matr_apropriador,
+            newdatarow = ApropDataRow(matr_func, nome_func, "", 
+                                      nome_apropriador, matr_apropriador,
+                                      nome_responsavel, matr_responsavel,
                                       nome_setor, nome_planilha, turno, suplentes, flags)
 
             celldata.append(newdatarow)

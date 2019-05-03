@@ -65,11 +65,13 @@ class Map(object):
 
             # This is used to validate the first line.
             first_line = ApropDataRow(*['matr_func', 'nome_func', 'apelido', 'nome_apropriador', 'matr_apropriador',
-                          'nome_setor', 'nome_planilha', 'turno', 'suplentes', 'flags'])
+                                        'nome_responsavel', 'matr_responsavel', 'nome_setor', 'nome_planilha', 'turno',
+                                        'suplentes', 'flags'])
 
             try:
                 try:
                     matr_func, nome_func, apelido_func, nome_apropriador, matr_apropriador, \
+                    nome_responsavel, matr_responsavel, \
                     nome_setor, nome_planilha, turno, suplentes, flags = mapline_s
                 except ValueError as e:
                     raise MapException((u"Número de Campos Incorreto [{}]".format(e),), _linenumber)
@@ -156,8 +158,9 @@ class Map(object):
 
         return splitmd
 
-    def get_apropriadores_matr(self):
-        return sorted(list(set([(x.nome_apropriador, x.matr_apropriador) for x in self.getmapdata() if not self.invalid])))
+    def get_responsaveis_matr(self):
+        return sorted(list(set([(x.nome_responsavel, x.matr_responsavel) for x in self.getmapdata()
+                                if not self.invalid])))
 
     def get_nomesetores(self):
         return sorted(list(set([x.nome_setor for x in self.getmapdata() if not self.invalid])))
@@ -171,14 +174,14 @@ class Map(object):
     def get_turnos(self):
         return sorted(list(set([x.turno for x in self.getmapdata() if not self.invalid])))
 
-    def get_funcionarios(self, _apropriador_matr=None, _nomesetor=None, _nome_planilha=None, _turno=None):
+    def get_funcionarios(self, _responsavel_matr=None, _nomesetor=None, _nome_planilha=None, _turno=None):
 
         # Copy of the map data list.
         md = self.getmapdata()
 
-        if _apropriador_matr:
-            md = [e for e in md if (e.nome_apropriador == _apropriador_matr[0] and
-                                    e.matr_apropriador == _apropriador_matr[1])]
+        if _responsavel_matr:
+            md = [e for e in md if (e.nome_responsavel == _responsavel_matr[0] and
+                                    e.matr_responsavel == _responsavel_matr[1])]
 
         if _nomesetor:
             md = [e for e in md if e.nome_setor == _nomesetor]
@@ -215,7 +218,7 @@ class Map(object):
 
         return [(self.get_funcionarios(_apr_matr, _nomesetor, _nomeplanilha, _turno),
                  (_apr_matr, _nomesetor, _nomeplanilha, _turno))
-            for _apr_matr in self.get_apropriadores_matr()
+            for _apr_matr in self.get_responsaveis_matr()
             for _nomesetor in self.get_nomesetores()
             for _nomeplanilha in self.get_nomeplanilhas()
             for _turno in self.get_turnos()]
