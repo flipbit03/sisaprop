@@ -32,10 +32,6 @@ class MapDataLoader(object):
 
         # This map matches os.path.basename(filename) against the specific data loaders supported by this module.
         self.loadabletypes = {
-            # Ignore opened .xlsx backups
-            r"^\~\$.+\.xlsx$": self.noneloader,
-            # XLSX Loader
-            r"\.xlsx$": self.xlsxloader,
             # CSV Loader
             r"\.csv$": self.csvloader,
             # SisapropHelperLoader
@@ -116,34 +112,6 @@ class MapDataLoader(object):
                                       nome_setor, nome_planilha, turno, suplentes, flags)
 
             celldata.append(newdatarow)
-
-        return celldata
-
-    def xlsxloader(self, fn):
-        try:
-            from openpyxl import load_workbook
-            import warnings
-        except:
-            print("Please install python module OPENPYXL to enable .XLSX Map import.")
-            return []
-
-        # Load XLSX
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            wb = load_workbook(fn)
-            # Load FIRST SHEET (This is the sheet that will be used to extract data)
-            ws = wb.get_sheet_by_name(wb.get_sheet_names()[0])
-
-        celldata = []
-        # Extract data.
-        for row in ws.rows:
-            fullrow = ApropDataRow(*[str(cell.value) if cell.value else '' for cell in row])
-
-            # empty row?
-            if not bool(list(filter(None, fullrow))):
-                l.debug("Skipping empty line from worksheet...")
-            else:
-                celldata.append(fullrow)
 
         return celldata
 
