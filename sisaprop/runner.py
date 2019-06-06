@@ -50,12 +50,11 @@ class SISAPROP_Runner(object):
         renderoutputpath = os.path.join(self.outputsfolder, workermap.name, self.rendermethod)
         l.debug(u"Output path = {0}".format(renderoutputpath))
 
-        print(u"\nO mapa será renderizado na pasta \"{0}\"...".format(renderoutputpath))
-
         # Render!
         l.debug(u"[Calling MapRenderManager.Render]")
         maprendermanager.render(workermap, renderoutputpath, self.rendermethod)
 
-# print "CAIU"
-# from code import interact
-# interact(local=locals())
+        print("\n###############################################################################")
+        print(u"Mapas gerados com sucesso! Os mapas encontram-se na pasta:\n{0}".format(renderoutputpath))
+        print("###############################################################################\n")
+        input("--Pressione ENTER para finalizar o programa--")
